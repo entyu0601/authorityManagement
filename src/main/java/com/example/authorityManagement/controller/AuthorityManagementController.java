@@ -28,54 +28,15 @@ public class AuthorityManagementController {
 	@Autowired
 	private AuthorityManagementService authorityManagementService;
 
-	@Autowired
-	private AuthoritygroupeditDao authoritygroupeditDao;
-
 	/* 権限グループの新規登録 */
 	@PostMapping(value = "/api/createAuthorityGroup")
 	public AuthorityManagementRes createAuthorityGroup(@RequestBody AuthorityManagementReq req) throws ParseException {
-
-		// ｛グループ名称/グループID｝を入力する判断
-		if (!StringUtils.hasText(req.getGroupName())) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
-		} else if (!StringUtils.hasText(req.getGroupID())) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
-		}
-
-		// 「グループID」英字以外の文字を入力場合の判断
-		if (!req.getGroupID().matches("^[a-zA-Z0-9]+$")) {
-			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_001.getMessage());
-		}
-
-		// ｛グループ名称/グループID｝を重複しない判断
-		Optional<Authoritygroupedit> groupIdOp = authoritygroupeditDao.findByGroupID(req.getGroupID());
-		if (groupIdOp.isPresent()) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
-		}
-
-		Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(req.getGroupName());
-		if (groupNameOp.isPresent()) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
-		}
-
 		return authorityManagementService.createAuthorityGroup(req.getGroupName(), req.getGroupID(), req.getComment());
 	}
 
 	/* 権限グループの更新 */
 	@PostMapping(value = "/api/updateAuthorityGroup")
 	public AuthorityManagementRes updateAuthorityGroup(@RequestBody AuthorityManagementReq req) throws ParseException {
-
-		// ｛グループ名称｝を入力する判断
-		if (!StringUtils.hasText(req.getGroupName())) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
-		}
-
-		// ｛グループ名称｝を重複しない判断
-		Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(req.getGroupName());
-		if (groupNameOp.isPresent()) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
-		}
-
 		return authorityManagementService.updateAuthorityGroup(req.getAuthorityGroupEditAutoId(), req.getGroupName(),
 				req.getComment());
 	}
@@ -88,7 +49,7 @@ public class AuthorityManagementController {
 
 	/* 権限グループの削除 */
 	@PostMapping(value = "/api/deleteAuthorityGroup")
-	public AuthorityManagementRes deleteAuthorityGroup(@RequestBody AuthorityManagementReq req) {
+	public AuthorityManagementRes deleteAuthorityGroup(@RequestBody AuthorityManagementReq req) throws Exception {
 		return authorityManagementService.deleteAuthorityGroup(req.getAuthorityGroupEditAutoId());
 	}
 

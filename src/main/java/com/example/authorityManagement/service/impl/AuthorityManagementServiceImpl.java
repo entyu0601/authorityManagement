@@ -33,6 +33,29 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 	public AuthorityManagementRes createAuthorityGroup(String groupName, String groupID, String comment)
 			throws ParseException {
 
+		// ｛グループ名称/グループID｝を入力する判断
+		if (!StringUtils.hasText(groupName)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
+		} else if (!StringUtils.hasText(groupID)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
+		}
+
+		// 「グループID」英字以外の文字を入力場合の判断
+		if (!groupID.matches("^[a-zA-Z0-9]+$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_001.getMessage());
+		}
+
+		// ｛グループ名称/グループID｝を重複しない判断
+		Optional<Authoritygroupedit> groupIdOp = authoritygroupeditDao.findByGroupID(groupID);
+		if (groupIdOp.isPresent()) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
+		}
+
+		Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(groupName);
+		if (groupNameOp.isPresent()) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
+		}
+
 		// 権限グループの新規登録
 		Authoritygroupedit authoritygroupedit = new Authoritygroupedit(groupName, groupID, comment);
 
@@ -55,6 +78,17 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 		// authorityGroupEditAutoIdで、該当データ情報を取得
 		Optional<Authoritygroupedit> authoritygroupeOp = authoritygroupeditDao.findById(authorityGroupEditAutoId);
 		Authoritygroupedit authoritygroupedit = authoritygroupeOp.get();
+
+		// ｛グループ名称｝を入力する判断
+		if (!StringUtils.hasText(groupName)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_001.getMessage());
+		}
+
+		// ｛グループ名称｝を重複しない判断
+		Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(groupName);
+		if (groupNameOp.isPresent()) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
+		}
 
 		// CreateDateのフォーマット判断
 		SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -83,10 +117,14 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 
 	/* 権限グループの削除 */
 	@Override
-	public AuthorityManagementRes deleteAuthorityGroup(int authorityGroupEditAutoId) {
+	public AuthorityManagementRes deleteAuthorityGroup(int authorityGroupEditAutoId) throws Exception {
 
-		Authoritygroupedit authoritygroupedit = authoritygroupeditDao
-				.findByAuthorityGroupEditAutoId(authorityGroupEditAutoId);
+		Optional<Authoritygroupedit> authoritygroupOp = authoritygroupeditDao.findById(authorityGroupEditAutoId);
+
+		if (!authoritygroupOp.isPresent())
+			throw new Exception("To set delFlg of AuthorityGroup is null");
+
+		Authoritygroupedit authoritygroupedit = authoritygroupOp.get();
 		authoritygroupedit.setDelFlg(true);
 
 		authoritygroupeditDao.save(authoritygroupedit);
