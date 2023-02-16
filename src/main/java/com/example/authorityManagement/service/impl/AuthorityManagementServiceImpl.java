@@ -2,6 +2,7 @@ package com.example.authorityManagement.service.impl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +71,7 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 
 	}
 
-	/* 権限グループの更新 */
+	/* 権限グループの更新 ok*/
 	@Override
 	public AuthorityManagementRes updateAuthorityGroup(int authorityGroupEditAutoId, String groupName, String comment)
 			throws ParseException {
@@ -85,9 +86,11 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 		}
 
 		// ｛グループ名称｝を重複しない判断
-		Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(groupName);
-		if (groupNameOp.isPresent()) {
-			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
+		if (!authoritygroupedit.getGroupName().equalsIgnoreCase(groupName)) {
+			Optional<Authoritygroupedit> groupNameOp = authoritygroupeditDao.findByGroupName(groupName);
+			if (groupNameOp.isPresent()) {
+				return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_002.getMessage());
+			}
 		}
 
 		// CreateDateのフォーマット判断
@@ -117,14 +120,10 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 
 	/* 権限グループの削除 */
 	@Override
-	public AuthorityManagementRes deleteAuthorityGroup(int authorityGroupEditAutoId) throws Exception {
+	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroup(int authorityGroupEditAutoId) {
 
-		Optional<Authoritygroupedit> authoritygroupOp = authoritygroupeditDao.findById(authorityGroupEditAutoId);
-
-		if (!authoritygroupOp.isPresent())
-			throw new Exception("To set delFlg of AuthorityGroup is null");
-
-		Authoritygroupedit authoritygroupedit = authoritygroupOp.get();
+		Authoritygroupedit authoritygroupedit = authoritygroupeditDao
+				.findByAuthorityGroupEditAutoId(authorityGroupEditAutoId);
 		authoritygroupedit.setDelFlg(true);
 
 		authoritygroupeditDao.save(authoritygroupedit);
@@ -136,13 +135,10 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 	public AuthorityManagementRes queryAuthorityGroupList() {
 		List<Authoritygroupedit> authoritygroupList = authoritygroupeditDao.findAll();
 
-		// 添加過濾條件
-		authoritygroupList = authoritygroupList.stream().filter(ag -> ag.isDelFlg() == false)
+		// 添加過濾條件+ 按照創建時間排序
+		authoritygroupList = authoritygroupList.stream().filter(ag -> !ag.isDelFlg()) // DelFlg為0才能顯示
+				.sorted(Comparator.comparing(Authoritygroupedit::getCreateDate).reversed())
 				.collect(Collectors.toList());
-
-		// 排序
-		authoritygroupList
-				.sort((a1, a2) -> Integer.compare(a2.getAuthorityGroupEditAutoId(), a1.getAuthorityGroupEditAutoId()));
 
 		// 「authoritygroupList」がnullかどうかを判断。
 		if (CollectionUtils.isEmpty(authoritygroupList)) {

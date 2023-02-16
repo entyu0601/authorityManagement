@@ -18,7 +18,7 @@ public interface AuthorityManagementService {
 	public AuthorityManagementRes getAuthorityGroupInfo(int authorityGroupEditAutoId);
 
 	/* 権限グループの削除 */
-	public AuthorityManagementRes deleteAuthorityGroup(int authorityGroupEditAutoId)throws Exception;
+	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroup(int authorityGroupEditAutoId);
 
 	/* 権限グループリスト */
 	public AuthorityManagementRes queryAuthorityGroupList();

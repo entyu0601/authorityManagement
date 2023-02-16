@@ -16,23 +16,23 @@ public class Authoritygroupedit {
 	// K2025
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "Authority_Group_Edit_Auto_Id")
+	@Column(name = "AUTHORITY_GROUP_EDIT_AUTO_ID")
 	private int authorityGroupEditAutoId;
 
-	@Column(name = "Create_Date")
+	@Column(name = "CREATE_DATE")
 	private Date createDate;
 
-	@Column(name = "Group_Name")
+	@Column(name = "GROUP_NAME")
 	private String groupName;
 
-	@Column(name = "Group_ID")
+	@Column(name = "GROUP_ID")
 	private String groupID;
 
-	@Column(name = "Comment")
+	@Column(name = "COMMENT")
 	private String comment;
 
-	@Column(name = "Del_Flg")
-	private boolean delFlg = false;
+	@Column(name = "DEL_FLG")
+	private boolean delFlg;
 
 	public Authoritygroupedit() {
 

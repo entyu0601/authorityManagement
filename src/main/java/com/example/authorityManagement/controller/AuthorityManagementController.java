@@ -48,9 +48,9 @@ public class AuthorityManagementController {
 	}
 
 	/* 権限グループの削除 */
-	@PostMapping(value = "/api/deleteAuthorityGroup")
-	public AuthorityManagementRes deleteAuthorityGroup(@RequestBody AuthorityManagementReq req) throws Exception {
-		return authorityManagementService.deleteAuthorityGroup(req.getAuthorityGroupEditAutoId());
+	@PostMapping(value = "/api/setIsDelFlgedOfAuthorityGroup")
+	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroup(@RequestBody AuthorityManagementReq req) {
+		return authorityManagementService.setIsDelFlgedOfAuthorityGroup(req.getAuthorityGroupEditAutoId());
 	}
 
 	/* 権限グループリスト */
