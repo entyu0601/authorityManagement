@@ -47,6 +47,12 @@ public class Authoritygroupedit {
 		this.comment = comment;
 	}
 
+	public void updateAuthoritygroupedit(Date createDate, String groupName, String comment) {
+		this.createDate = createDate;
+		this.groupName = groupName;
+		this.comment = comment;
+	}
+
 	public Authoritygroupedit(String groupName, String groupID, String comment) {
 		this.groupName = groupName;
 		this.groupID = groupID;

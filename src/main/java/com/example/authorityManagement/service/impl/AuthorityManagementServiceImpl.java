@@ -2,23 +2,29 @@ package com.example.authorityManagement.service.impl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletResponse;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.example.authorityManagement.constants.MessageInfo;
+import com.example.authorityManagement.entity.AuthorityGroupMember;
 import com.example.authorityManagement.entity.Authoritygroupedit;
+import com.example.authorityManagement.repository.AuthorityGroupMemberDao;
 import com.example.authorityManagement.repository.AuthoritygroupeditDao;
 import com.example.authorityManagement.service.ifs.AuthorityManagementService;
 import com.example.authorityManagement.vo.AuthorityManagementRes;
@@ -28,6 +34,12 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 
 	@Autowired
 	private AuthoritygroupeditDao authoritygroupeditDao;
+
+	@Autowired
+	private AuthorityGroupMemberDao authorityGroupMemberDao;
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	/* 権限グループの新規登録 ok */
 	@Override
@@ -71,7 +83,7 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 
 	}
 
-	/* 権限グループの更新 ok*/
+	/* 権限グループの更新 ok */
 	@Override
 	public AuthorityManagementRes updateAuthorityGroup(int authorityGroupEditAutoId, String groupName, String comment)
 			throws ParseException {
@@ -99,13 +111,10 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 		authoritygroupedit.setCreateDate(format.parse(formattedDate));
 
 		// 権限グループの更新
-		Authoritygroupedit newAuthoritygroupedit = new Authoritygroupedit(
-				authoritygroupedit.getAuthorityGroupEditAutoId(), authoritygroupedit.getCreateDate(), groupName,
-				authoritygroupedit.getGroupID(), comment);
+		authoritygroupedit.updateAuthoritygroupedit(authoritygroupedit.getCreateDate(), groupName, comment);
+		authoritygroupeditDao.save(authoritygroupedit);
 
-		authoritygroupeditDao.save(newAuthoritygroupedit);
-
-		return new AuthorityManagementRes(newAuthoritygroupedit, MessageInfo.UPDATE_SUCCESSFUL.getMessage());
+		return new AuthorityManagementRes(authoritygroupedit, MessageInfo.UPDATE_SUCCESSFUL.getMessage());
 
 	}
 
@@ -113,12 +122,13 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 	@Override
 	public AuthorityManagementRes getAuthorityGroupInfo(int authorityGroupEditAutoId) {
 
+		// authorityGroupEditAutoIdで、該当データ情報を取得
 		Authoritygroupedit authoritygroupedit = authoritygroupeditDao
 				.findByAuthorityGroupEditAutoId(authorityGroupEditAutoId);
 		return new AuthorityManagementRes(authoritygroupedit, MessageInfo.GET_ID_SUCCESSFUL.getMessage());
 	}
 
-	/* 権限グループの削除 */
+	/* 権限グループの削除 ok */
 	@Override
 	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroup(int authorityGroupEditAutoId) {
 
@@ -147,7 +157,172 @@ public class AuthorityManagementServiceImpl implements AuthorityManagementServic
 		return new AuthorityManagementRes(authoritygroupList, MessageInfo.DATA_IS_FOUND.getMessage());
 	}
 
-//	/* 権限グループリスト->K2024　*/ BaseDaoで、insertIntoAuthorityGroupListのメソッド
-//	public AuthorityManagementRes queryAuthorityGroupList();
+	/*
+	 * ----k2024/ k2025/
+	 * ----02.16-end----------------------------------------------------------------
+	 * 
+	 */
+
+	/* 権限グループ対象の新規登録 */
+	@Override
+	public AuthorityManagementRes createAuthorityGroupMember(String firstNameEN, String lastNameEN, String firstNameCN,
+			String lastNameCN, boolean gender, int birthDate, int authorityGroupEditAutoId) {
+
+		// authorityGroupEditAutoIdで、該当グループのデータを取得
+		Authoritygroupedit authoritygroup = authoritygroupeditDao
+				.findByAuthorityGroupEditAutoId(authorityGroupEditAutoId);
+
+		// ｛0｝を入力する判断
+		if (!StringUtils.hasText(firstNameEN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(lastNameEN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(firstNameCN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(lastNameCN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		}
+
+		// ｛0｝のフォーマット判断
+		if (!firstNameEN.matches("^[A-Za-z]+([\\s.]+[A-Za-z]+)*$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!lastNameEN.matches("^[A-Za-z]+([\\s.]+[A-Za-z]+)*$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!firstNameCN.matches("^[\u4e00-\u9fa5]{1,}$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!lastNameCN.matches("^[\u4e00-\u9fa5]{1,}$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		}
+
+		// 権限グループ対象の新規登録
+		AuthorityGroupMember authorityGroupMember = new AuthorityGroupMember(firstNameEN, lastNameEN, firstNameCN,
+				lastNameCN, gender, birthDate, authoritygroup.getAuthorityGroupEditAutoId());
+
+		authorityGroupMemberDao.save(authorityGroupMember);
+
+		return new AuthorityManagementRes(authorityGroupMember, MessageInfo.CREATE_SUCCESSFUL.getMessage());
+	}
+
+	/* 権限グループ対象の更新 */
+	@Override
+	public AuthorityManagementRes updateAuthorityGroupMember(int authorityGroupMemberId, String firstNameEN,
+			String lastNameEN, String firstNameCN, String lastNameCN, boolean gender, int birthDate) {
+
+		// authorityGroupMemberIdで、該当グループ対象のデータ情報を取得
+		Optional<AuthorityGroupMember> authorityGroupMemberOp = authorityGroupMemberDao
+				.findById(authorityGroupMemberId);
+		AuthorityGroupMember authorityGroupMember = authorityGroupMemberOp.get();
+
+		// ｛0｝を入力する判断
+		if (!StringUtils.hasText(firstNameEN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(lastNameEN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(firstNameCN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		} else if (!StringUtils.hasText(lastNameCN)) {
+			return new AuthorityManagementRes(MessageInfo.NOT_ENTER_ERROR_003.getMessage());
+		}
+
+		// ｛0｝のフォーマット判断
+		if (!firstNameEN.matches("^[A-Za-z]+([\\s.]+[A-Za-z]+)*$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!lastNameEN.matches("^[A-Za-z]+([\\s.]+[A-Za-z]+)*$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!firstNameCN.matches("^[\u4e00-\u9fa5]{1,}$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		} else if (!lastNameCN.matches("^[\u4e00-\u9fa5]{1,}$")) {
+			return new AuthorityManagementRes(MessageInfo.NAME_ERROR_002.getMessage());
+		}
+
+		// 権限グループ対象の更新
+		authorityGroupMember.updateAuthorityGroupMember(firstNameEN, lastNameEN, firstNameCN, lastNameCN, gender,
+				birthDate);
+
+		authorityGroupMemberDao.save(authorityGroupMember);
+		return new AuthorityManagementRes(authorityGroupMember, MessageInfo.UPDATE_SUCCESSFUL.getMessage());
+	}
+
+	/* 権限グループ対象の該当データ情報を取得 */
+	@Override
+	public AuthorityManagementRes getAuthorityGroupMemberInfo(int authorityGroupMemberId) {
+
+		// authorityGroupMemberIdで、該当グループ対象のデータ情報を取得
+		AuthorityGroupMember authorityGroupMember = authorityGroupMemberDao
+				.findByAuthorityGroupMemberId(authorityGroupMemberId);
+		return new AuthorityManagementRes(authorityGroupMember, MessageInfo.GET_ID_SUCCESSFUL.getMessage());
+
+	}
+
+	/* 権限グループ対象の削除 */
+	@Override
+	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroupMember(int authorityGroupMemberId) {
+
+		AuthorityGroupMember authorityGroupMember = authorityGroupMemberDao
+				.findByAuthorityGroupMemberId(authorityGroupMemberId);
+		authorityGroupMember.setDelFlg(true);
+
+		authorityGroupMemberDao.save(authorityGroupMember);
+		return new AuthorityManagementRes(authorityGroupMember, MessageInfo.DELETE_SUCCESSFUL.getMessage());
+	}
+
+	/* 権限グループ対象のリスト */
+	@Override
+	public AuthorityManagementRes queryAuthorityMemberGroupList(int authorityGroupEditAutoId) {
+
+		List<AuthorityGroupMember> authorityGroupMemberList = authorityGroupMemberDao
+				.findAllByAuthorityGroupEditAutoId(authorityGroupEditAutoId);
+
+		// 添加過濾條件
+		authorityGroupMemberList = authorityGroupMemberList.stream().filter(ag -> !ag.isDelFlg()) // DelFlg為0才能顯示
+//						.sorted(Comparator.comparing(authorityGroupMemberList::getCreateDate).reversed())
+				.collect(Collectors.toList());
+
+		// 「authorityGroupMemberList」がnullかどうかを判断。
+		if (CollectionUtils.isEmpty(authorityGroupMemberList)) {
+			return new AuthorityManagementRes(MessageInfo.DATA_IS_NOT_FOUND.getMessage());
+		}
+		return new AuthorityManagementRes(authorityGroupMemberList);
+	}
+
+	/* (検索)権限グループ対象のリスト */
+	@Override
+	public AuthorityManagementRes searchAuthorityMemberGroupList(String firstNameEN, String lastNameEN,
+			String firstNameCN, String lastNameCN, boolean gender, int birthDate) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<AuthorityGroupMember> query = cb.createQuery(AuthorityGroupMember.class);
+		Root<AuthorityGroupMember> root = query.from(AuthorityGroupMember.class);
+		List<Predicate> predicates = new ArrayList<>();
+
+		// 對DelFlg的限制
+		predicates.add(cb.equal(root.get("delFlg"), 0));
+
+		if (StringUtils.hasText(firstNameEN)) {
+			predicates.add(cb.like(root.get("firstNameEN"), "%" + firstNameEN + "%"));
+		}
+		if (StringUtils.hasText(lastNameEN)) {
+			predicates.add(cb.like(root.get("lastNameEN"), "%" + lastNameEN + "%"));
+		}
+		if (StringUtils.hasText(firstNameCN)) {
+			predicates.add(cb.like(root.get("firstNameCN"), "%" + firstNameCN + "%"));
+		}
+		if (StringUtils.hasText(lastNameCN)) {
+			predicates.add(cb.like(root.get("lastNameCN"), "%" + lastNameCN + "%"));
+		}
+		if (birthDate != 0) {
+			predicates.add(cb.equal(root.get("birthDate"), birthDate));
+		}
+		if (gender) {
+			predicates.add(cb.isTrue(root.get("gender")));
+		} else {
+			predicates.add(cb.isFalse(root.get("gender")));
+		}
+
+		query.where(predicates.toArray(new Predicate[0]));
+
+		List<AuthorityGroupMember> resultList = entityManager.createQuery(query).getResultList();
+		return new AuthorityManagementRes(resultList);
+	}
 
 }

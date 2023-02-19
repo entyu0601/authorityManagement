@@ -2,20 +2,13 @@ package com.example.authorityManagement.controller;
 
 import java.text.ParseException;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import org.springframework.web.bind.annotation.RestController;
-
-import com.example.authorityManagement.constants.MessageInfo;
-import com.example.authorityManagement.entity.Authoritygroupedit;
-
-import com.example.authorityManagement.repository.AuthoritygroupeditDao;
 
 import com.example.authorityManagement.service.ifs.AuthorityManagementService;
 import com.example.authorityManagement.vo.AuthorityManagementReq;
@@ -57,6 +50,48 @@ public class AuthorityManagementController {
 	@PostMapping(value = "/api/queryAuthorityGroupList")
 	public AuthorityManagementRes queryAuthorityGroupList() {
 		return authorityManagementService.queryAuthorityGroupList();
+	}
+
+	/* 権限グループ対象の新規登録 */
+	@PostMapping(value = "/api/createAuthorityGroupMember")
+	public AuthorityManagementRes createAuthorityGroupMember(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.createAuthorityGroupMember(Memreq.getFirstNameEN(), Memreq.getLastNameEN(),
+				Memreq.getFirstNameCN(), Memreq.getLastNameCN(), Memreq.isGender(), Memreq.getBirthDate(),
+				Memreq.getAuthorityGroupEditAutoId());
+	}
+
+	/* 権限グループ対象の更新 */
+	@PostMapping(value = "/api/updateAuthorityGroupMember")
+	public AuthorityManagementRes updateAuthorityGroupMember(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.updateAuthorityGroupMember(Memreq.getAuthorityGroupMemberId(),
+				Memreq.getFirstNameEN(), Memreq.getLastNameEN(), Memreq.getFirstNameCN(), Memreq.getLastNameCN(),
+				Memreq.isGender(), Memreq.getBirthDate());
+	}
+
+	/* 権限グループ対象の該当データ情報を取得 */
+	@PostMapping(value = "/api/getAuthorityGroupMemberInfo")
+	public AuthorityManagementRes getAuthorityGroupMemberInfo(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.getAuthorityGroupMemberInfo(Memreq.getAuthorityGroupMemberId());
+	}
+
+	/* 権限グループ対象の削除 */
+	@PostMapping(value = "/api/setIsDelFlgedOfAuthorityGroupMember")
+	public AuthorityManagementRes setIsDelFlgedOfAuthorityGroupMember(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.setIsDelFlgedOfAuthorityGroupMember(Memreq.getAuthorityGroupMemberId());
+	}
+
+	/* 権限グループリスト */
+	@PostMapping(value = "/api/queryAuthorityMemberGroupList")
+	public AuthorityManagementRes queryAuthorityMemberGroupList(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.queryAuthorityMemberGroupList(Memreq.getAuthorityGroupEditAutoId());
+	}
+
+	/* (検索)権限グループ対象のリスト */
+	@PostMapping(value = "/api/searchAuthorityMemberGroupList")
+	public AuthorityManagementRes searchAuthorityMemberGroupList(@RequestBody AuthorityManagementReq Memreq) {
+		return authorityManagementService.searchAuthorityMemberGroupList(Memreq.getFirstNameEN(),
+				Memreq.getLastNameEN(), Memreq.getFirstNameCN(), Memreq.getLastNameCN(), Memreq.isGender(),
+				Memreq.getBirthDate());
 	}
 
 }

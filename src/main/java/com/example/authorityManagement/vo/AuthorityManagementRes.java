@@ -2,8 +2,8 @@ package com.example.authorityManagement.vo;
 
 import java.util.List;
 
+import com.example.authorityManagement.entity.AuthorityGroupMember;
 import com.example.authorityManagement.entity.Authoritygroupedit;
-import com.example.authorityManagement.entity.Authoritygrouplist;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -11,11 +11,11 @@ public class AuthorityManagementRes {
 
 	private Authoritygroupedit authoritygroupedit;
 
-//	private Authoritygrouplist authoritygroup;
+	private AuthorityGroupMember authoritygroupmember;
 
 	private List<Authoritygroupedit> authoritygrouplist;
 
-//	private List<Authoritygrouplist> authoritygrouplist;
+	private List<AuthorityGroupMember> authorityGroupMemberlist;
 
 	private String message;
 
@@ -32,14 +32,18 @@ public class AuthorityManagementRes {
 		this.message = message;
 	}
 
-//	public AuthorityManagementRes(Authoritygrouplist authoritygroup, String message) {
-//		this.authoritygroup = authoritygroup;
-//		this.message = message;
-//	}
+	public AuthorityManagementRes(AuthorityGroupMember authoritygroupmember, String message) {
+		this.authoritygroupmember = authoritygroupmember;
+		this.message = message;
+	}
 
 	public AuthorityManagementRes(List<Authoritygroupedit> authoritygrouplist, String message) {
 		this.authoritygrouplist = authoritygrouplist;
 		this.message = message;
+	}
+
+	public AuthorityManagementRes(List<AuthorityGroupMember> authorityGroupMemberlist) {
+		this.authorityGroupMemberlist = authorityGroupMemberlist;
 	}
 
 	public Authoritygroupedit getAuthoritygroupedit() {
@@ -50,13 +54,13 @@ public class AuthorityManagementRes {
 		this.authoritygroupedit = authoritygroupedit;
 	}
 
-//	public Authoritygrouplist getAuthoritygroup() {
-//		return authoritygroup;
-//	}
-//
-//	public void setAuthoritygroup(Authoritygrouplist authoritygroup) {
-//		this.authoritygroup = authoritygroup;
-//	}
+	public AuthorityGroupMember getAuthoritygroupmember() {
+		return authoritygroupmember;
+	}
+
+	public void setAuthoritygroupmember(AuthorityGroupMember authoritygroupmember) {
+		this.authoritygroupmember = authoritygroupmember;
+	}
 
 	public List<Authoritygroupedit> getAuthoritygrouplist() {
 		return authoritygrouplist;
@@ -64,6 +68,14 @@ public class AuthorityManagementRes {
 
 	public void setAuthoritygrouplist(List<Authoritygroupedit> authoritygrouplist) {
 		this.authoritygrouplist = authoritygrouplist;
+	}
+
+	public List<AuthorityGroupMember> getAuthorityGroupMemberlist() {
+		return authorityGroupMemberlist;
+	}
+
+	public void setAuthorityGroupMemberlist(List<AuthorityGroupMember> authorityGroupMemberlist) {
+		this.authorityGroupMemberlist = authorityGroupMemberlist;
 	}
 
 	public String getMessage() {
